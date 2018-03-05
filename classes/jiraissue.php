@@ -160,15 +160,17 @@ class jira_issue {
 		return $diff->format('%a');
 	}
 
-	public function is_hq_member() {
-		foreach ($this->hqmembers as $name) {
-			if ($name == $this->assignee) {
-				return true;
-			}
-		}
-		return false;
-	}
+    public function is_hq_member() {
+        $DB = new DB();
 
+        $hqmembers = $DB->get_records('users', ['hqmember' => 1]);
+        foreach ($hqmembers as $name) {
+            if ($name->username == $this->assignee) {
+                return true;
+            }
+        }
+        return false;
+    }
 }
 
 
