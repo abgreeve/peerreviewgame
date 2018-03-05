@@ -41,6 +41,13 @@ class jira_issue {
 		return new jira_issue($mdl, $summary, $assignee, $peerreviewer, $type);
 	}
 
+	public static function load_from_id($idnumber) {
+		$DB = new DB();
+		$result = $DB->get_records('issues', ['id' => $idnumber]);
+		return new jira_issue($result[0]->mdl, $result[0]->summary, $result[0]->assignee, $result[0]->peerreviewer,
+				$result[0]->type, $result[0]->datereview, $result[0]->id);
+	}
+
 	public function save() {
 		$DB = new DB();
 		$data = [];
@@ -110,7 +117,7 @@ class jira_issue {
 		$this->reviewed = 1;
 		$this->datecompleted = time();
 
-		$sql = "SELECT i.id, i.datereview, u.id as userid
+		$sql = "SELECT i.id, i.datereview, i.peerreviewer, u.id as userid
 				  FROM issues i
 			 LEFT JOIN users u ON i.peerreviewer = u.username
 				 WHERE i.mdl = :mdl  AND (reviewed <> 1 OR reviewed IS NULL)";
@@ -138,7 +145,6 @@ class jira_issue {
 				];
 				// save score to user.
 				$DB->insert_record('userissues', $userissue);
-				$mdlissue['peerreviewer'] = $value->userid;
 			}
 			$DB->update_record('issues', $mdlissue);
 		}

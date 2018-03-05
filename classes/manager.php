@@ -74,8 +74,6 @@ class manager {
 		$jira = new jira();
 		$searchstring = 'project = "MDL" and status not in ("waiting for peer review") and key in ('. $mdlstring . ')';
 		$result = $jira->search($searchstring);
-		// print_object($result);
-		// die();
 		foreach ($result->issues as $rawdata) {
 			$issue = jira_issue::load_from_raw_data($rawdata);
 			$issue->set_issue_as_reviewed();
@@ -83,7 +81,7 @@ class manager {
 		}
 	}
 
-	public function get_scores() {
+    public function get_scores() {
 		$DB = new DB();
 		$sql = "SELECT u.displayname, sum(ui.points) as Points
 				  FROM `userissues` ui

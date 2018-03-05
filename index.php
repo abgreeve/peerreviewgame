@@ -6,13 +6,11 @@ include 'database/database.class.php';
 
 
 $manager = new manager();
-// print_object($manager->update_issues());
-// $manager->update_issues();
-// print_object($manager->get_all_active_mdls());
 
-// $manager->check_for_peer_reviewed_issues();
+$manager->update_issues();
+
+$manager->check_for_peer_reviewed_issues();
 $issues = $manager->get_issues();
-// print_object($issues);
 
 $table = new atable($issues);
 ?>
