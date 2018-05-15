@@ -1,12 +1,10 @@
 <?php
 
-
 function print_object($data) {
 	echo '<pre>';
 	echo print_r($data);
 	echo '</pre>';
 }
-
 
 class atable {
 
@@ -51,9 +49,5 @@ class atable {
 		$html .= '</table>';
 		return $html;
 	}
-
 }
-
-
-
 ?>

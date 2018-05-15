@@ -8,11 +8,16 @@ include 'database/database.class.php';
 $manager = new manager();
 
 $manager->update_issues();
+$manager->update_plugin_issues();
 
 $manager->check_for_peer_reviewed_issues();
+// TODO: Do the same for plugins.
 $issues = $manager->get_issues();
+$pluginissues = $manager->get_plugin_issues();
+// print_object($pluginissues);
 
 $table = new atable($issues);
+$plugintable = new atable($pluginissues);
 ?>
 
 <html>
@@ -27,5 +32,7 @@ $table = new atable($issues);
 	<h1>Peer reviewing</h1>
 	<a href="scores.php">Scores</a> | <a href="management.php">Management</a>
 	<?php echo $table->out(); ?>
+    <h2>Contrib issues</h2>
+    <?php echo $plugintable->out(); ?>
 </body>
 </html>

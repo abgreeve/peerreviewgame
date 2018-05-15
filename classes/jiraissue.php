@@ -2,24 +2,21 @@
 
 class jira_issue {
 
-	protected $id;
-	protected $mdl;
-	protected $summary;
-	protected $assignee;
-	protected $peerreviewer;
-	protected $type;
-	protected $datesentforpeereview;
-	protected $reviewed = null;
-	protected $datecompleted = null;
+    protected $id;
+    protected $mdl;
+    protected $summary;
+    protected $assignee;
+    protected $peerreviewer;
+    protected $type;
+    protected $datesentforpeereview;
+    protected $reviewed = null;
+    protected $datecompleted = null;
 
-	const ASSIGNEE_HQ = 0;
-	const ASSIGNEE_OTHER = 7;
-	const ISSUE_TYPE_OTHER = 0;
-	const ISSUE_TYPE_IMPROVEMENT = 7;
-	const BASE_SCORE = 7;
-
-	protected $hqmembers = ['abgreeve', 'zig', 'cameron1729', 'sarjona', 'Geshoski', 'markn', 'marina', 'jleyva',
-							'jpataleta', 'dobedobedoh', 'mudrd8mz', 'damyon', 'jaked', 'stronk7', 'basbrands', 'ryanwyllie'];
+    const ASSIGNEE_HQ = 0;
+    const ASSIGNEE_OTHER = 7;
+    const ISSUE_TYPE_OTHER = 0;
+    const ISSUE_TYPE_IMPROVEMENT = 7;
+    const BASE_SCORE = 7;
 
 	public function __construct($mdl, $summary, $assignee, $peerreviewer, $type, $datereview = null, $id = null) {
 		$this->mdl = $mdl;
@@ -28,25 +25,38 @@ class jira_issue {
 		$this->peerreviewer = $peerreviewer;
 		$this->type = $type;
 		$this->datesentforpeereview = $datereview ?? time();
-		$this->id = $id ?? null;
+		$this->id = $id;
 	}
 
-
 	public static function load_from_raw_data($data) {
-		$mdl = $data->key;
-		$summary = $data->fields->summary;
-		$type = $data->fields->issuetype->name;
-		$assignee = (isset($data->fields->assignee->name)) ? $data->fields->assignee->name : '';
-		$peerreviewer = (isset($data->fields->customfield_10118->name)) ? $data->fields->customfield_10118->name : '';
+		$DB = new DB;
+
+        $mdl = $data->key;
+        $summary = $data->fields->summary;
+        $type = $data->fields->issuetype->name;
+        $assignee = (isset($data->fields->assignee->name)) ? $data->fields->assignee->name : '';
+        $peerreviewer = (isset($data->fields->customfield_10118->name)) ? $data->fields->customfield_10118->name : '';
+
+		// Should check to see if this issue exists and ammend that record.
+		$sql = "SELECT *
+				FROM issues
+				WHERE mdl = :mdl AND (reviewed <> 1 OR reviewed IS NULL)";
+		$records = $DB->execute_sql($sql, ['mdl' => $mdl]);
+
+		// If we get back a record then we should load that.
+		if (!empty($records)) {
+			return new jira_issue($mdl, $summary, $assignee, $peerreviewer, $type, $records[0]->datereview, $records[0]->id);
+		}
+
 		return new jira_issue($mdl, $summary, $assignee, $peerreviewer, $type);
 	}
 
-	public static function load_from_id($idnumber) {
-		$DB = new DB();
-		$result = $DB->get_records('issues', ['id' => $idnumber]);
-		return new jira_issue($result[0]->mdl, $result[0]->summary, $result[0]->assignee, $result[0]->peerreviewer,
-				$result[0]->type, $result[0]->datereview, $result[0]->id);
-	}
+    public static function load_from_id($idnumber) {
+        $DB = new DB();
+        $result = $DB->get_records('issues', ['id' => $idnumber]);
+        return new jira_issue($result[0]->mdl, $result[0]->summary, $result[0]->assignee, $result[0]->peerreviewer,
+                $result[0]->type, $result[0]->datereview, $result[0]->id);
+    }
 
 	public function save() {
 		$DB = new DB();
@@ -120,7 +130,7 @@ class jira_issue {
 		$sql = "SELECT i.id, i.datereview, i.peerreviewer, u.id as userid
 				  FROM issues i
 			 LEFT JOIN users u ON i.peerreviewer = u.username
-				 WHERE i.mdl = :mdl  AND (reviewed <> 1 OR reviewed IS NULL)";
+				 WHERE i.mdl = :mdl  AND (i.reviewed <> 1 OR i.reviewed IS NULL)";
 
 		$result = $DB->execute_sql($sql, ['mdl' => $this->get_mdl(false)]);
 		foreach ($result as $key => $value) {
@@ -143,6 +153,7 @@ class jira_issue {
 					'rewardid' => 0,
 					'rewardclaimed' => 0
 				];
+				// print_object($userissue);
 				// save score to user.
 				$DB->insert_record('userissues', $userissue);
 			}

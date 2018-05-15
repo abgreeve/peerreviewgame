@@ -6,6 +6,8 @@ include 'database/database.class.php';
 
 
 $manager = new manager();
+
+$completedissues = $manager->get_hq_completed_issues();
 // print_object($manager->update_issues());
 // $manager->update_issues();
 // print_object($manager->get_all_active_mdls());
@@ -14,7 +16,7 @@ $manager = new manager();
 // $issues = $manager->get_issues();
 // print_object($issues);
 
-// $table = new atable($issues);
+$table = new atable($completedissues);
 ?>
 
 <html>
@@ -28,6 +30,6 @@ $manager = new manager();
 <body>
 	<h1>Management</h1>
 	<a href="scores.php">Scores</a> | <a href="index.php">Issues</a>
-	<!-- <?php echo $table->out(); ?> -->
+	<?php echo $table->out(); ?>
 </body>
 </html>
