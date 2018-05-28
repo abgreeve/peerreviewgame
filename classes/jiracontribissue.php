@@ -127,8 +127,8 @@ class jira_contrib_issue {
                     'issueid' => $this->id,
                     'points' => $score,
                     'datecompleted' => $this->datecompleted,
-                    'rewardid' => 0,
-                    'rewardclaimed' => 0
+                    'rewardclaimed' => 0,
+                    'gold' => 0
                 ];
                 // print_object($userissue);
                 // save score to user.

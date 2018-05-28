@@ -3,30 +3,71 @@ include 'jira-class.php';
 include 'lib/generallib.php';
 include 'classes/manager.php';
 include 'database/database.class.php';
+include 'lib/navigation.php';
 
-
+$navigation = new navigation('scores.php');
 $manager = new manager();
-// print_object($manager->update_issues());
-// $manager->update_issues();
 
-$scores = $manager->get_scores();
-// $manager->check_for_peer_reviewed_issues();
-// print_object($issues);
+if (isset($_GET['id'])) {
+    $competitiontime = competition_time::load_from_id($_GET['id']);
+    $issuescores = $manager->get_issue_scores($competitiontime);
+    $contribscores = $manager->get_contrib_scores($competitiontime);
 
-$table = new atable($scores);
+} else {
+    $issuescores = $manager->get_issue_scores();
+    $contribscores = $manager->get_contrib_scores();
+}
+
+$cscores = [];
+foreach ($contribscores as $contribscore) {
+    $cscores[$contribscore->username] = ['displayname' => $contribscore->displayname, 'Points' => $contribscore->Points];
+}
+
+$iscores = [];
+foreach ($issuescores as $issuescore) {
+    $contribpoints = 0;
+    $total = $issuescore->Points;
+    if (array_key_exists($issuescore->username, $cscores)) {
+        $contribpoints = $cscores[$issuescore->username]['Points'];
+        $total = $total + $contribpoints;
+        unset($cscores[$issuescore->username]);
+    }
+    $iscores[$issuescore->username] = ['displayname' => $issuescore->displayname, 'MDL Points' => $issuescore->Points, 'Contrib Points' => $contribpoints, 'total' => $total];
+}
+
+// Make sure we include people that only did contrib reviews.
+foreach ($cscores as $username => $cscore) {
+    $iscores[$username] = ['displayname' => $cscore['displayname'], 'MDL Points' => 0, 'Contrib Points' => $cscore['Points'], 'total' => $cscore['Points']];
+}
+
+// Let's do this by time periods!
+// Get the time periods.
+$comptimes = $manager->get_all_competition_periods(false);
+
+$html  = '';
+foreach ($comptimes as $timeperiod) {
+    $html .= '<a href="scores.php?id=' . $timeperiod->get_id() . '">' . $timeperiod->get_title() . '</a>';
+    $html .= '<br />';
+}
+
+$table = new atable($iscores);
+$table->set_headers(['Display Name', 'MDL Points', 'Contrib Points', 'Total']);
+$header = new page_head('Peer review - Scores');
 ?>
 
 <html>
-<head>
-<title>Peer review - Scores</title>
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
-</head>
+<?php echo $header->out(); ?>
 <body>
-	<h1>Peer reviewing</h1>
-	<a href="index.php">Issues</a>
-	<?php echo $table->out(); ?>
+    <?php echo $navigation->out() ?>
+    <h1>Scores</h1>
+    <br />
+    <?php echo $html; ?>
+    <?php
+        if (isset($competitiontime)) {
+            echo '<h2>' . $competitiontime->get_title() . '</h2>';
+            echo '<p>For the competition time between ' . $competitiontime->get_starttime() . ' and ' . $competitiontime->get_endtime() . '</p>';
+        }
+    ?>
+    <?php echo $table->out(); ?>
 </body>
 </html>

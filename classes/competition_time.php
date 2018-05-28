@@ -31,7 +31,6 @@ class competition_time {
 		}
 	}
 
-
 	public function set_id($id) {
 		$this->id = $id;
 	}
@@ -48,6 +47,32 @@ class competition_time {
 		$this->endtime = $endtime;
 	}
 
+	public function get_starttime($format = 'd-m-Y', $formatted = true) {
+		if (!$formatted) {
+			return $this->starttime;
+		}
+		$starttime = new DateTime();
+		$starttime->setTimeStamp($this->starttime);
+		return $starttime->format($format);
+	}
+
+	public function get_endtime($format = 'd-m-Y', $formatted = true) {
+		if (!$formatted) {
+			return $this->endtime;
+		}
+		$endtime = new DateTime();
+		$endtime->setTimeStamp($this->endtime);
+		return $endtime->format($format);
+	}
+
+	public function get_title() {
+		return $this->title;
+	}
+
+	public function get_id() {
+		return $this->id;
+	}
+
 	public static function load_from_id($id) {
 		$DB = new DB();
 		$result = $DB->get_records('competition_time', ['id' => $id]);
@@ -56,8 +81,6 @@ class competition_time {
 		}
 		return false;
 	}
-
 }
-
 
 ?>

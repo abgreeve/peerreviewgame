@@ -1,35 +1,55 @@
 <?php
-include 'jira-class.php';
+// include 'jira-class.php';
 include 'lib/generallib.php';
+include 'session/sessioncheck.php';
+include 'lib/navigation.php';
 include 'classes/manager.php';
-include 'database/database.class.php';
+include 'classes/card_manager.php';
+include_once 'database/database.class.php';
 
+$navigation = new navigation('management.php');
+admin_check();
 
 $manager = new manager();
+$cardmanager = new card_manager();
 
-$completedissues = $manager->get_hq_completed_issues();
-// print_object($manager->update_issues());
-// $manager->update_issues();
-// print_object($manager->get_all_active_mdls());
+$competitiondetails = $manager->get_active_competition_time();
 
-// $manager->check_for_peer_reviewed_issues();
-// $issues = $manager->get_issues();
-// print_object($issues);
+$currentteams = $manager->get_current_teams();
 
-$table = new atable($completedissues);
+$cardset = $cardmanager->get_card_set($competitiondetails);
+// print_object($cardset);
+// print_object($currentteams);
+
+// $completedissues = $manager->get_hq_completed_issues();
+
+// $table = new atable($completedissues);
+$header = new page_head('Management page');
 ?>
 
 <html>
-<head>
-<title>Management page</title>
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
-<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
-</head>
+<?php echo $header->out(); ?>
 <body>
-	<h1>Management</h1>
-	<a href="scores.php">Scores</a> | <a href="index.php">Issues</a>
-	<?php echo $table->out(); ?>
+    <?php echo $navigation->out(); ?>
+    <h1>Management</h1>
+
+    <h2><?php echo $competitiondetails->get_title() ?></h2>
+    <p>Current competition period: <?php echo $competitiondetails->get_starttime() ?> - <?php echo $competitiondetails->get_endtime() ?> <a href="timeedit.php">edit</a></p>
+
+    <h3>Current active cards</h3>
+    <?php
+        if (!empty($cardset)) {
+            foreach ($cardset as $card) {
+                echo $card->get_name();
+                echo '<br />';
+            }
+        } else {
+            echo '<p>No cards selected for this competition. <a href="compcards.php?id=' . $competitiondetails->get_id() . '">Change</a></p>';
+        }
+    ?>
+
+
+
+    <!-- <?php //echo $table->out(); ?> -->
 </body>
 </html>

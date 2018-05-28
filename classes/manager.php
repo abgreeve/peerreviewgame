@@ -3,13 +3,10 @@
 include "jiraissue.php";
 include "jiracontribissue.php";
 include "competition_time.php";
+include "team.php";
+// include '../database/database.class.php';
 
 class manager {
-
-
-    public function __construct() {
-        // Not much.
-    }
 
     public function update_issues() {
         // Get all of the issues numbers.
@@ -18,7 +15,7 @@ class manager {
         $jira = new jira();
         $searchstring = 'project = "MDL" and status="waiting for peer review" and key not in ('. $mdlstring . ')';
         $result = $jira->search($searchstring);
-        // print_object($result);
+
         foreach ($result->issues as $rawdata) {
             $issue = jira_issue::load_from_raw_data($rawdata);
             $issue->save();
@@ -26,12 +23,7 @@ class manager {
     }
 
     public function update_plugin_issues() {
-        $contribrecords = $this->get_plugin_issues(false);
-        $contribids = array_map(function($record) {
-            return $record->contrib;
-        }, $contribrecords);
-
-        $contribstring = implode(',', $contribids);
+        $contribstring = $this->get_all_active_contrib();
 
         $jira = new jira();
         if (!empty($contribstring)) {
@@ -74,6 +66,15 @@ class manager {
             return $issue->get_mdl(false);
         }, $issues);
         return implode(',', $issuearray);
+    }
+
+    public function get_all_active_contrib() {
+        $contribrecords = $this->get_plugin_issues(false);
+        $contribids = array_map(function($record) {
+            return $record->contrib;
+        }, $contribrecords);
+
+        return implode(',', $contribids);
     }
 
     public function get_issues($formatted = true) {
@@ -123,18 +124,98 @@ class manager {
         }
     }
 
-    public function get_scores() {
+    public function check_for_peer_reviewed_plugin_issues() {
+        $contribstring = $this->get_all_active_contrib();
+
+        $jira = new jira();
+        $searchstring = 'project = "CONTRIB" and status not in ("to do") and key in (' . $contribstring . ')';
+        $result = $jira->search($searchstring);
+        foreach ($result->issues as $rawdata) {
+            $issue = jira_contrib_issue::load_from_raw_data($rawdata);
+            $issue->save();
+            $issue->set_issue_as_reviewed();
+            $issue->save();
+        }
+    }
+
+    public function get_issue_scores(competition_time $comptime = null) {
+        $where = '';
+        $params = [];
+        if ($comptime) {
+            $where = 'WHERE datecompleted BETWEEN :startdate AND :enddate';
+            $params = ['startdate' => $comptime->get_starttime('', false), 'enddate' => $comptime->get_endtime('', false)];
+        }
         $DB = new DB();
-        $sql = "SELECT u.displayname, sum(ui.points) as Points
+        $sql = "SELECT u.username, u.displayname, sum(ui.points) as Points
                   FROM `userissues` ui
                   JOIN users u ON ui.userid = u.id
-              GROUP BY u.displayname";
-        $results = $DB->execute_sql($sql);
+                  $where
+              GROUP BY u.username";
+        $results = $DB->execute_sql($sql, $params);
+        return $results;
+    }
+
+    public function get_contrib_scores(competition_time $comptime = null) {
+        $where = '';
+        $params = [];
+        if ($comptime) {
+            $where = 'WHERE datecompleted BETWEEN :startdate AND :enddate';
+            $params = ['startdate' => $comptime->get_starttime('', false), 'enddate' => $comptime->get_endtime('', false)];
+        }
+        $DB = new DB();
+        $sql = "SELECT u.username, u.displayname ,sum(ui.points) as Points
+                  FROM `user_plugin_issues` ui
+                  JOIN users u ON ui.userid = u.id
+                  $where
+              GROUP BY u.username";
+        $results = $DB->execute_sql($sql, $params);
         return $results;
     }
 
     public function get_active_competition_time() {
         $DB = new DB();
+        $sql = "SELECT *
+                  FROM competition_time
+                 WHERE :currenttime BETWEEN starttime AND endtime ";
+        $results = $DB->execute_sql($sql, ['currenttime' => time()]);
+        if (count($results) > 1) {
+            throw new Exception("Too many results for competition time, check the db for multiple records", 1);
+        }
+        $result = array_shift($results);
+        return new competition_time($result->title, $result->starttime, $result->endtime, $result->id);
+    }
+
+    public function get_all_competition_periods($formatted = true) {
+        $DB = new DB();
+        $records = $DB->get_records('competition_time');
+        $times = array_map(function($record) {
+            return new competition_time($record->title, $record->starttime, $record->endtime, $record->id);
+        }, $records);
+        if ($formatted) {
+            return array_map(function($time) {
+                return [
+                    'Title' => $time->get_title(),
+                    'Start time' => $time->get_starttime(),
+                    'End time' => $time->get_endtime(),
+                    'Edit' => '<a href="timeedit.php?id='. $time->get_id() .'">Edit</a>'
+                ];
+            }, $times);
+        } else {
+            return $times;
+        }
+    }
+
+    public function save_completion_time($title, $starttime, $endtime, $id = '') {
+        if (empty($id)) {
+            $id = null;
+        }
+        // Set dates to timestamp.
+        $startdate = DateTime::createFromFormat('d-m-Y', $starttime);
+        $startdate->setTime(0, 0, 0);
+        $enddate = DateTime::createFromFormat('d-m-Y', $endtime);
+        $enddate->setTime(23, 59, 59);
+        $completiontime = new competition_time($title, $startdate->getTimestamp(), $enddate->getTimestamp(), $id);
+        $completiontime->save();
     }
 
     public function get_hq_completed_issues() {
@@ -159,7 +240,23 @@ class manager {
         return $display;
     }
 
-}
+    public function get_current_teams($competitiontime = null) {
+        $DB = new DB();
+        $competition = (isset($competitiontime)) ? $competitiontime : $this->get_active_competition_time();
+        $params = ['competitionid' => $competition->get_id()];
+        $teams = $DB->get_records('teams', $params);
+        return array_map(function($team) {
+            return new team($team->teamname, $team->competitionid, $team->fortressname, $team->hitpoints, $team->id);
+        }, $teams);
+    }
 
+    
+
+    public function get_hq_members() {
+        $DB = new DB();
+
+        return $DB->get_records('users', ['hqmember' => 1]);
+    }
+}
 
 ?>

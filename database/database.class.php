@@ -101,7 +101,8 @@ class DB extends mysqli {
         $info = array();
         foreach ($data as $key => $value) {
             if (!is_numeric($value)) {
-                $info[$key] = '"' . $value . '"';
+                $string = htmlspecialchars($value);
+                $info[$key] = '"' . $string . '"';
             } else {
                 $info[$key] = $value;
             }
@@ -109,7 +110,9 @@ class DB extends mysqli {
         $values = implode(',', $info);
         $sql = 'INSERT INTO ' . $table . ' (' . $tableheadings . ') VALUES (' . $values . ')';
         $result = $this->query($sql);
-        // print_object($result);
+        if (!$result) {
+            printf('error: ' . $this->error);
+        }
         return $this->insert_id;
     }
 
