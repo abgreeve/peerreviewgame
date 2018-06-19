@@ -257,6 +257,21 @@ class manager {
 
         return $DB->get_records('users', ['hqmember' => 1]);
     }
+
+    public function get_other_issues() {
+        // Get all of the issues numbers.
+        $mdlstring = $this->get_all_active_mdls();
+
+        $jira = new jira();
+        $searchstring = 'project = "MDL" and status!="waiting for peer review" and key in ('. $mdlstring . ')';
+        $result = $jira->search($searchstring);
+
+        foreach ($result->issues as $rawdata) {
+            $issue = jira_issue::load_from_raw_data($rawdata);
+            print_object($issue);
+        }
+    }
+
 }
 
 ?>

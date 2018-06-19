@@ -7,48 +7,59 @@ import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
 import IconButton from '@material-ui/core/IconButton';
 import MenuIcon from '@material-ui/icons/Menu';
-import Menu from '@material-ui/core/Menu';
-import MenuItem from '@material-ui/core/MenuItem';
+import Drawer from '@material-ui/core/Drawer';
+import List from '@material-ui/core/List';
+import ListItem from '@material-ui/core/ListItem';
+import ListItemText from '@material-ui/core/ListItemText';
 
 const styles = {
-    root: {
-        flexGrow: 1
+    list: {
+        width: '100%',
+        maxWidth: 500
     }
 }
 
-export default class Navigation extends React.Component {
+class Navigation extends React.Component {
+
     state = {
-        anchorEl: null
+        left: false
     };
 
-    handleClick = event => {
-        this.setState({ anchorEl: event.currentTarget });
-    };
-
-    handleClose = () => {
-        this.setState({ anchorEl: null })
+    toggleDrawer = (side, open) => () => {
+        this.setState({
+            [side]: open
+        });
     };
 
     render() {
 
-        const { anchorEl } = this.state;
+        const { classes } = this.props;
+
+        const sideList = (
+            <div>
+                <List>
+                    <ListItem button>
+                        <ListItemText primary="Issues" />
+                    </ListItem>
+                    <ListItem button>
+                        <ListItemText primary="Scores" />
+                    </ListItem>
+                </List>
+            </div>
+        );
 
         return (
             <div>
                 <AppBar position="static" color="default">
                     <Toolbar>
-                        <IconButton color='inherit' aria-label="Menu" onClick={this.handleClick}>
+                        <IconButton color='inherit' aria-label="Menu" onClick={this.toggleDrawer('left', true)}>
                             <MenuIcon />
                         </IconButton>
-                        <Menu id="simple-menu" anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={this.handleClose}>
-                            <MenuItem onClick={this.handleClose}>Issues</MenuItem>
-                            <MenuItem onClick={this.handleClose}>Score</MenuItem>
-                            <MenuItem onClick={this.handleClose}>Game</MenuItem>
-                            <MenuItem onClick={this.handleClose}>Management</MenuItem>
-                            <MenuItem onClick={this.handleClose}>Teams</MenuItem>
-                            <MenuItem onClick={this.handleClose}>Cards</MenuItem>
-                            <MenuItem onClick={this.handleClose}>Users</MenuItem>
-                        </Menu>
+                        <Drawer open={this.state.left} onClose={this.toggleDrawer('left', false)}>
+                            <div>
+                                {sideList}
+                            </div>
+                        </Drawer>
                         <Typography variant="title" color="inherit">
                             Title of things
                         </Typography>
@@ -58,3 +69,9 @@ export default class Navigation extends React.Component {
         );
     }
 }
+
+Navigation.propTypes = {
+    classes: PropTypes.object.isRequired
+};
+
+export default withStyles(styles)(Navigation);

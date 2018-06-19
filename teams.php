@@ -2,6 +2,9 @@
 include 'lib/generallib.php';
 include 'classes/manager.php';
 include 'database/database.class.php';
+include_once 'lib/navigation.php';
+
+$navigation = new navigation('teams.php');
 
 $manager = new manager();
 
@@ -28,7 +31,7 @@ $header = new page_head('Team page');
 <html>
 <?php echo $header->out(); ?>
 <body>
-    <?php include 'lib/navigation.php' ?>
+    <?php echo $navigation->out() ?>
     <h1>Teams</h1>
     <form name="team-form" action="teams.php" method="POST">
         <div>Team name</div>

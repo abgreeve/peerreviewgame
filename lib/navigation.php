@@ -11,6 +11,9 @@ class navigation {
         $this->html .= '<div class="collapse navbar-collapse">';
         $this->html .= '<ul class="navbar-nav">';
         $this->html .= '<li class="nav-item">';
+        $this->html .= '<a class="nav-link" href="home.php">Home</a>';
+        $this->html .= '</li>';
+        $this->html .= '<li class="nav-item">';
         $this->html .= '<a class="nav-link" href="reviewlist.php">Issues</a>';
         $this->html .= '</li>';
         $this->html .= '<li class="nav-item">';

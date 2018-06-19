@@ -61,7 +61,7 @@ function get_userid() {
 
     $username = $_SESSION['username'];
     $DB = new DB();
-    $userid = $DB->get_fields('users', 'id', array('email' => $username));
+    $userid = $DB->get_fields('users', 'id', array('username' => $username));
     return $userid[0]->id;
 }
 

@@ -2,6 +2,9 @@
 include 'lib/generallib.php';
 include 'classes/card_manager.php';
 include 'database/database.class.php';
+include_once 'lib/navigation.php';
+
+$navigation = new navigation('cards.php');
 
 $manager = new card_manager();
 
@@ -20,7 +23,7 @@ $header = new page_head('Card page');
 <html>
 <?php echo $header->out(); ?>
 <body>
-    <?php include 'lib/navigation.php' ?>
+    <?php echo $navigation->out() ?>
     <h1>Cards</h1>
     <form name="load-cards" action="cards.php" method="POST">
     <button name="loadcards" value="loadcards">Load cards</button>

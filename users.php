@@ -5,6 +5,9 @@ include 'classes/manager.php';
 include 'classes/reward_manager.php';
 include 'classes/card_manager.php';
 include 'database/database.class.php';
+include_once 'lib/navigation.php';
+
+$navigation = new navigation('users.php');
 
 // Should go in a lib / class somewhere.
 $DB = new DB();
@@ -77,7 +80,7 @@ $header = new page_head('User page');
 <html>
 <?php echo $header->out(); ?>
 <body>
-    <?php include 'lib/navigation.php' ?>
+    <?php echo $navigation->out() ?>
     <h1>Temp user page</h1>
 
     <form name="userselect" action="users.php" method="POST">

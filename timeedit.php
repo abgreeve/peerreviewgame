@@ -1,7 +1,10 @@
 <?php
 include 'lib/generallib.php';
 include 'classes/manager.php';
-include 'database/database.class.php';
+include 'lib/navigation.php';
+include_once 'database/database.class.php';
+
+$navigation = new navigation('timeedit.php');
 
 $manager = new manager();
 
@@ -32,7 +35,7 @@ $header = new page_head('Competition time');
 <html>
 <?php echo $header->out(); ?>
 <body>
-    <?php include 'lib/navigation.php' ?>
+    <?php echo $navigation->out(); ?>
     <h1>Competition periods</h1>
     <h2>Add competition time</h2>
     <form name="time-form" action="timeedit.php" method="POST">
