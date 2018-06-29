@@ -35,8 +35,8 @@ class page_head {
 
 class atable {
 
-	protected $headers = '';
-	protected $data = '';
+	protected $headers = [];
+	protected $data = [];
 
 	public function __construct($tabledata = null) {
 		if (isset($tabledata)) {
@@ -50,8 +50,10 @@ class atable {
 
 	public function set_data($data) {
 		$this->data = $data;
-		foreach ($data[0] as $key => $notused) {
-			$this->headers[] = $key;
+		if (!empty($data)) {
+			foreach ($data[0] as $key => $notused) {
+				$this->headers[] = $key;
+			}
 		}
 	}
 

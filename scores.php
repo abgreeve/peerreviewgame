@@ -15,6 +15,7 @@ if (isset($_GET['id'])) {
 
 } else {
     $issuescores = $manager->get_issue_scores();
+    // print_object($issuescores);
     $contribscores = $manager->get_contrib_scores();
 }
 

@@ -150,7 +150,7 @@ class manager {
                   FROM `userissues` ui
                   JOIN users u ON ui.userid = u.id
                   $where
-              GROUP BY u.username";
+              GROUP BY u.username, u.displayname";
         $results = $DB->execute_sql($sql, $params);
         return $results;
     }
@@ -167,7 +167,7 @@ class manager {
                   FROM `user_plugin_issues` ui
                   JOIN users u ON ui.userid = u.id
                   $where
-              GROUP BY u.username";
+              GROUP BY u.username, u.displayname";
         $results = $DB->execute_sql($sql, $params);
         return $results;
     }

@@ -56,6 +56,12 @@ class DB extends mysqli {
         }
 
         $result = $this->query($sql);
+
+        if (!$result) {
+            printf('error: ' . $this->error);
+        }
+
+
         $data = array();
         $i = 0;
         while ($rawdata = $result->fetch_assoc()) {
@@ -171,16 +177,23 @@ class DB extends mysqli {
     	    }
     	}
     	$result = $this->query($sql);
+
+        if (!$result) {
+            printf('error: ' . $this->error);
+        }
+
     	$data = array();
         $i = 0;
-        while ($rawdata = $result->fetch_assoc()) {
-            $data[$i] = new stdClass();
-            foreach ($rawdata as $key => $row) {
-                $data[$i]->$key = $row;
+        if ($result) {
+            while ($rawdata = $result->fetch_assoc()) {
+                $data[$i] = new stdClass();
+                foreach ($rawdata as $key => $row) {
+                    $data[$i]->$key = $row;
+                }
+                $i++;
             }
-            $i++;
+            $result->free();
         }
-        $result->free();
         return $data;
     }
 
