@@ -7,7 +7,7 @@ function print_object($data) {
 }
 
 function url_redirect($url, array $params = []) {
-	
+
 	header('Location: ' . $url);
 }
 
@@ -26,6 +26,7 @@ class page_head {
 
 	public function out() {
 		$html = '<head>';
+		$html .= '<meta charset="UTF-8">';
 		$html .= '<title>' . $this->title . '</title>';
 		$html .= $this->stylesheet;
 		$html .= '</head>';
@@ -51,7 +52,7 @@ class atable {
 	public function set_data($data) {
 		$this->data = $data;
 		if (!empty($data)) {
-			foreach ($data[0] as $key => $notused) {
+			foreach ($data as $key => $notused) {
 				$this->headers[] = $key;
 			}
 		}

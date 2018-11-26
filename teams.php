@@ -5,8 +5,8 @@ include 'database/database.class.php';
 include_once 'lib/navigation.php';
 
 $navigation = new navigation('teams.php');
-
-$manager = new manager();
+$database = new DB();
+$manager = new manager($database);
 
 if (isset($_POST['teamname'])) {
     $team = new team($_POST['teamname'], $_POST['competitionid'], $_POST['fortressname'], $_POST['hitpoints']);
@@ -67,7 +67,7 @@ $header = new page_head('Team page');
             }
             ?>
             <input type="submit" name="compsubmit" value="Go">
-        </select> 
+        </select>
     </form>
     <?php
         if (isset($teamdetails)) {

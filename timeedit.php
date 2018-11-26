@@ -5,8 +5,8 @@ include 'lib/navigation.php';
 include_once 'database/database.class.php';
 
 $navigation = new navigation('timeedit.php');
-
-$manager = new manager();
+$database = new DB();
+$manager = new manager($database);
 
 if (isset($_POST['title'])) {
     $title = $_POST['title'];

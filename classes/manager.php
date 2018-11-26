@@ -4,9 +4,14 @@ include "jiraissue.php";
 include "jiracontribissue.php";
 include "competition_time.php";
 include "team.php";
-// include '../database/database.class.php';
 
 class manager {
+
+    protected $DB;
+
+    public function __construct($database) {
+        $this->DB = $database;
+    }
 
     public function update_issues() {
         // Get all of the issues numbers.
@@ -15,11 +20,14 @@ class manager {
         $jira = new jira();
         $searchstring = 'project = "MDL" and status="waiting for peer review" and key not in ('. $mdlstring . ')';
         $result = $jira->search($searchstring);
+        // print_object($result);
+        // print_object(count($result->issues));
 
         foreach ($result->issues as $rawdata) {
             $issue = jira_issue::load_from_raw_data($rawdata);
             $issue->save();
         }
+        return count($result->issues);
     }
 
     public function update_plugin_issues() {
@@ -27,22 +35,23 @@ class manager {
 
         $jira = new jira();
         if (!empty($contribstring)) {
-            $searchstring = 'project = "CONTRIB" and status="to do" and key not in (' . $contribstring . ')';
+            $searchstring = 'project = "CONTRIB" and status in (new) and key not in (' . $contribstring . ')';
         } else {
-            $searchstring = 'project = "CONTRIB" and status="to do"';
+            $searchstring = 'project = "CONTRIB" and status in (new)';
         }
 
         $result = $jira->search($searchstring);
-        foreach ($result->issues as $rawdata) {
-            $issue = jira_contrib_issue::load_from_raw_data($rawdata);
-            $issue->save();
+        if (isset($result->issues)) {
+            foreach ($result->issues as $rawdata) {
+                $issue = jira_contrib_issue::load_from_raw_data($rawdata);
+                $issue->save();
+            }
         }
     }
 
     public function get_plugin_issues($formatted = true) {
-        $DB = new DB();
         $sql = "SELECT * FROM plugin_issues WHERE reviewed is null or reviewed = 0";
-        $records = $DB->execute_sql($sql);
+        $records = $this->DB->execute_sql($sql);
         if ($formatted) {
             $issues = array_map(function($record){
                 $issue = new jira_contrib_issue($record->contrib, $record->summary, $record->assignee, $record->datereview, $record->id);
@@ -78,9 +87,8 @@ class manager {
     }
 
     public function get_issues($formatted = true) {
-        $DB = new DB();
         $sql = "SELECT * FROM issues WHERE reviewed is null or reviewed = 0";
-        $records = $DB->execute_sql($sql);
+        $records = $this->DB->execute_sql($sql);
         if ($formatted) {
             $issues = [];
             foreach ($records as $record) {
@@ -103,8 +111,7 @@ class manager {
     }
 
     public function get_issue($id) {
-        $DB = new DB();
-        $record = $DB->get_records('issues', ['id' => $id]);
+        $record = $this->DB->get_records('issues', ['id' => $id]);
         $issue = new jira_issue($record[0]->mdl, $record[0]->summary, $record[0]->assignee, $record[0]->peerreviewer, $record[0]->type, $record[0]->datereview, $record[0]->id);
         return $issue;
 
@@ -130,11 +137,13 @@ class manager {
         $jira = new jira();
         $searchstring = 'project = "CONTRIB" and status not in ("to do") and key in (' . $contribstring . ')';
         $result = $jira->search($searchstring);
-        foreach ($result->issues as $rawdata) {
-            $issue = jira_contrib_issue::load_from_raw_data($rawdata);
-            $issue->save();
-            $issue->set_issue_as_reviewed();
-            $issue->save();
+        if (isset($result->issues)) {
+            foreach ($result->issues as $rawdata) {
+                $issue = jira_contrib_issue::load_from_raw_data($rawdata);
+                $issue->save();
+                $issue->set_issue_as_reviewed();
+                $issue->save();
+            }
         }
     }
 
@@ -162,32 +171,32 @@ class manager {
             $where = 'WHERE datecompleted BETWEEN :startdate AND :enddate';
             $params = ['startdate' => $comptime->get_starttime('', false), 'enddate' => $comptime->get_endtime('', false)];
         }
-        $DB = new DB();
         $sql = "SELECT u.username, u.displayname ,sum(ui.points) as Points
                   FROM `user_plugin_issues` ui
                   JOIN users u ON ui.userid = u.id
                   $where
               GROUP BY u.username, u.displayname";
-        $results = $DB->execute_sql($sql, $params);
+        $results = $this->DB->execute_sql($sql, $params);
         return $results;
     }
 
     public function get_active_competition_time() {
-        $DB = new DB();
         $sql = "SELECT *
                   FROM competition_time
                  WHERE :currenttime BETWEEN starttime AND endtime ";
-        $results = $DB->execute_sql($sql, ['currenttime' => time()]);
+        $results = $this->DB->execute_sql($sql, ['currenttime' => time()]);
         if (count($results) > 1) {
             throw new Exception("Too many results for competition time, check the db for multiple records", 1);
         }
         $result = array_shift($results);
-        return new competition_time($result->title, $result->starttime, $result->endtime, $result->id);
+        if (!empty($result)) {
+            return new competition_time($result->title, $result->starttime, $result->endtime, $result->id);
+        }
+        return;
     }
 
     public function get_all_competition_periods($formatted = true) {
-        $DB = new DB();
-        $records = $DB->get_records('competition_time');
+        $records = $this->DB->get_records('competition_time');
         $times = array_map(function($record) {
             return new competition_time($record->title, $record->starttime, $record->endtime, $record->id);
         }, $records);
@@ -219,7 +228,6 @@ class manager {
     }
 
     public function get_hq_completed_issues() {
-        $DB = new DB();
         // We need to sort out what's going on with time. I've increased the size of the fields to make sure that they
         // are not getting truncated that way.
         // print_object(time());
@@ -227,7 +235,7 @@ class manager {
                   FROM issues i
                   JOIN userissues ui ON ui.issueid = i.id
                  WHERE reviewed = 1";
-        $results = $DB->execute_sql($sql);
+        $results = $this->DB->execute_sql($sql);
         $display = array_map(function($record) {
             return [
                 'MDL' => '<a href="https://tracker.moodle.org/browse/' . $record->mdl . '">' . $record->mdl . '</a>',
@@ -241,21 +249,21 @@ class manager {
     }
 
     public function get_current_teams($competitiontime = null) {
-        $DB = new DB();
         $competition = (isset($competitiontime)) ? $competitiontime : $this->get_active_competition_time();
-        $params = ['competitionid' => $competition->get_id()];
-        $teams = $DB->get_records('teams', $params);
-        return array_map(function($team) {
-            return new team($team->teamname, $team->competitionid, $team->fortressname, $team->hitpoints, $team->id);
-        }, $teams);
+        if (!empty($competition)) {
+            $params = ['competitionid' => $competition->get_id()];
+            $teams = $this->DB->get_records('teams', $params);
+            return array_map(function($team) {
+                return new team($team->teamname, $team->competitionid, $team->fortressname, $team->hitpoints, $team->id);
+            }, $teams);
+        }
+        return;
     }
 
-    
+
 
     public function get_hq_members() {
-        $DB = new DB();
-
-        return $DB->get_records('users', ['hqmember' => 1]);
+        return $this->DB->get_records('users', ['hqmember' => 1]);
     }
 
     public function get_other_issues() {

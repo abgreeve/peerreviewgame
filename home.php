@@ -11,13 +11,14 @@ include 'classes/user_manager.php';
 include_once 'database/database.class.php';
 
 $navigation = new navigation('home.php');
+$database = new DB();
 
 $userid = get_userid();
-$user = user::load_from_id($userid);
+$user = user::load_from_id($userid, $database);
 
-$manager = new manager();
+$manager = new manager($database);
 $currentcompetition = $manager->get_active_competition_time();
-$usermanager = new user_manager($userid);
+$usermanager = new user_manager($userid, $database);
 $completedissues = $usermanager->get_completed_issues($currentcompetition);
 $completedissuecount = count($completedissues);
 // print_object($completedissues);
@@ -33,9 +34,13 @@ if (isset($_GET['issuedetails'])) {
             'Date completed' => $datedetails->format('d-m-Y')
         ];
     }, $completedissues);
-    $issuedata = new atable($data);
+    if (!empty($data)) {
+        $issuedata = new atable($data);
+        $issuedata->set_headers(array_keys($data[0]));
+    }
 }
 
+$inventory = $user->get_inventory();
 
 $header = new page_head('Home');
 ?>
@@ -50,5 +55,25 @@ $header = new page_head('Home');
         echo $issuedata->out();
     }
     ?>
+    <h2>Inventory</h2>
+    <?php if ($inventory) { ?>
+        <div class="card" style="width: 25em;">
+            <div class="card-header">
+                Inventory
+            </div>
+            <div class="card-body">
+                <h5>Gold <?php echo $inventory['gold'] ?></h5>
+                <ul class="list-group list-group-flush">
+                <?php
+                    foreach ($inventory['cards'] as $card) {
+                        echo '<li class="list-group-item">' . $card['card']->get_name() . ' (' . $card['amount'] . ')';
+                    }
+                ?>
+                </ul>
+            </div>
+        </div>
+
+    <?php } ?>
+
 </body>
 </html>

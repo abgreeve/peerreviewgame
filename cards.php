@@ -5,8 +5,8 @@ include 'database/database.class.php';
 include_once 'lib/navigation.php';
 
 $navigation = new navigation('cards.php');
-
-$manager = new card_manager();
+$database = new DB();
+$manager = new card_manager($database);
 
 
 if (isset($_POST['loadcards'])) {

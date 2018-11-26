@@ -2,7 +2,7 @@
 
 function get_vars() {
     require(dirname(dirname(__FILE__)) . '/config.php');
-    
+
     return array(
         'host' => $host,
         'user' => $username,
@@ -28,7 +28,7 @@ class DB extends mysqli {
     }
 
     /**
-     * 
+     *
      * @param string $table  Table name.
      * @param array $where  Where clause (not required).
      * @param array $columns  Select columns (not required).
@@ -97,7 +97,7 @@ class DB extends mysqli {
      *
      * @param string $table short name for table e.g. 'users'
      * @param array $data Data to insert.
-     * @return int The insert id. 
+     * @return int The insert id.
      */
     function insert_record($table, $data) {
         // require dirname(dirname(__FILE__)) . '/config.php';
@@ -117,7 +117,7 @@ class DB extends mysqli {
         $sql = 'INSERT INTO ' . $table . ' (' . $tableheadings . ') VALUES (' . $values . ')';
         $result = $this->query($sql);
         if (!$result) {
-            printf('error: ' . $this->error);
+            // printf('error: ' . $this->error);
         }
         return $this->insert_id;
     }
@@ -157,7 +157,7 @@ class DB extends mysqli {
         $sql = 'DELETE FROM ' . $table . $wheresql;
         $result = $this->query($sql);
     }
-    
+
     /**
      * General method for sql queries
      *

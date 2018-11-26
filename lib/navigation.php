@@ -31,8 +31,11 @@ class navigation {
         $this->html .= '<li class="nav-item">';
         $this->html .= '<a class="nav-link" href="cards.php">Cards</a>';
         $this->html .= '</li>';
+        // $this->html .= '<li class="nav-item">';
+        // $this->html .= '<a class="nav-link" href="users.php">Users</a>';
+        // $this->html .= '</li>';
         $this->html .= '<li class="nav-item">';
-        $this->html .= '<a class="nav-link" href="users.php">Users</a>';
+        $this->html .= '<a class="nav-link" href="mydetails.php">My details</a>';
         $this->html .= '</li>';
         $this->html .= '</ul>';
         $this->html .= '</div>';

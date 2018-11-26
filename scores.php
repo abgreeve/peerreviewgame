@@ -6,7 +6,8 @@ include 'database/database.class.php';
 include 'lib/navigation.php';
 
 $navigation = new navigation('scores.php');
-$manager = new manager();
+$database = new DB();
+$manager = new manager($database);
 
 if (isset($_GET['id'])) {
     $competitiontime = competition_time::load_from_id($_GET['id']);
@@ -51,8 +52,12 @@ foreach ($comptimes as $timeperiod) {
     $html .= '<br />';
 }
 
-$table = new atable($iscores);
-$table->set_headers(['Display Name', 'MDL Points', 'Contrib Points', 'Total']);
+$tablestring = '';
+if (!empty($iscores)) {
+    $table = new atable($iscores);
+    $table->set_headers(['Display Name', 'MDL Points', 'Contrib Points', 'Total']);
+    $tablestring = $table->out();
+}
 $header = new page_head('Peer review - Scores');
 ?>
 
@@ -69,6 +74,6 @@ $header = new page_head('Peer review - Scores');
             echo '<p>For the competition time between ' . $competitiontime->get_starttime() . ' and ' . $competitiontime->get_endtime() . '</p>';
         }
     ?>
-    <?php echo $table->out(); ?>
+    <?php echo $tablestring; ?>
 </body>
 </html>

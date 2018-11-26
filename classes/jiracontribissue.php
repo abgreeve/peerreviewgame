@@ -43,7 +43,7 @@ class jira_contrib_issue {
     public static function load_from_id($idnumber) {
         $DB = new DB();
         $result = $DB->get_records('plugin_issues', ['id' => $idnumber]);
-        return new jira_plugin_issue($result[0]->contrib, $result[0]->summary, $result[0]->assignee, 
+        return new jira_plugin_issue($result[0]->contrib, $result[0]->summary, $result[0]->assignee,
                 $result[0]->datereview, $result[0]->id);
     }
 
@@ -60,7 +60,7 @@ class jira_contrib_issue {
                 $data['reviewed'] = $this->reviewed;
                 $data['datecompleted'] = $this->datecompleted;
             }
-            $DB->update_record('plugin_issues', $data); 
+            $DB->update_record('plugin_issues', $data);
         } else {
             $this->id = $DB->insert_record('plugin_issues', $data);
         }

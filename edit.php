@@ -13,7 +13,8 @@ if (isset($_GET['id'])) {
 	$date = $_POST['reviewdate'];
 }
 
-$manager = new manager();
+$database = new DB();
+$manager = new manager($database);
 $issue = $manager->get_issue($id);
 // print_object($issue);
 if (isset($date)) {

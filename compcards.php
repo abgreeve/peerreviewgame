@@ -6,7 +6,8 @@ include 'classes/card_manager.php';
 include 'database/database.class.php';
 
 // $manager = new manager();
-$cardmanager = new card_manager();
+$database = new DB();
+$cardmanager = new card_manager($database);
 
 if (isset($_GET['id'])) {
     $competition = competition_time::load_from_id($_GET['id']);

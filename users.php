@@ -19,9 +19,9 @@ $inventory = null;
 
 if (isset($_POST['userid'])) {
     $userid = $_POST['userid'];
-    $manager = new manager();
+    $manager = new manager($DB);
     $competition = $manager->get_active_competition_time();
-    $rewardmanager = new reward_manager();
+    $rewardmanager = new reward_manager($DB);
     $issues = $rewardmanager->get_unclaimed_reward_issues($userid, $competition);
     $issuecount = count($issues);
     if ($issuecount) {
@@ -43,7 +43,7 @@ if (isset($_POST['userid'])) {
              WHERE ui.userid = :userid
              GROUP BY ui.cardid";
     $records = $DB->execute_sql($sql, ['userid' => $userid]);
-    $cardmanager = new card_manager();
+    $cardmanager = new card_manager($DB);
     $cards = array_map(function($record) use ($cardmanager) {
         return [
             'card' => $cardmanager->get_card($record->cardname, $record->id),
@@ -60,8 +60,8 @@ if (isset($_GET['userid'])) {
     $userid = $_GET['userid'];
     $issuetype = $_GET['issuetype'];
     $issueid = $_GET['issueid'];
-    $manager = new manager();
-    $rewardmanager = new reward_manager();
+    $manager = new manager($DB);
+    $rewardmanager = new reward_manager($DB);
     $competition = $manager->get_active_competition_time();
     $rewards = $rewardmanager->get_reward($issuetype, $issueid, $userid, $competition);
     print_object($rewards);
@@ -125,7 +125,7 @@ $header = new page_head('User page');
                 </ul>
             </div>
         </div>
-        
+
     <?php } ?>
 
 

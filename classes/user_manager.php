@@ -4,14 +4,15 @@ class user_manager {
 
     protected $userid;
 
-    public function __construct($userid) {
+    protected $DB;
+
+    public function __construct($userid, DB $database) {
         $this->userid = $userid;
+        $this->DB = $database;
     }
 
-    // 
-    public function get_completed_issues($competition = null) {
-        $DB = new DB();
-
+    //
+    public function get_completed_issues(competition_time $competition = null) {
         $params = ['userid' => $this->userid];
 
         $competitionsql = '';
@@ -25,7 +26,7 @@ class user_manager {
                 FROM userissues ui
                 JOIN issues i ON ui.issueid = i.id
                 WHERE ui.userid = :userid $competitionsql";
-        $records = $DB->execute_sql($sql, $params);
+        $records = $this->DB->execute_sql($sql, $params);
         return $records;
     }
 

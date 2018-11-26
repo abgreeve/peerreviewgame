@@ -10,8 +10,9 @@ include_once 'database/database.class.php';
 $navigation = new navigation('management.php');
 admin_check();
 
-$manager = new manager();
-$cardmanager = new card_manager();
+$database = new DB();
+$manager = new manager($database);
+$cardmanager = new card_manager($database);
 
 $competitiondetails = $manager->get_active_competition_time();
 
